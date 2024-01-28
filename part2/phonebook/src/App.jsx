@@ -2,14 +2,18 @@ import { useEffect, useState } from 'react'
 import Filter from './components/Filter'
 import PhoneForm from './components/PhoneForm'
 import Display from './components/Display'
+import Notification from './components/Notification'
 
 import phoneEntriesService from './services/phoneEntries'
+
+import "./main.css"
 
 const App = () => {
   const [persons, setPersons] = useState([]) 
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [searchFilter, setSearchFilter] = useState('')
+  const [notification, setNotification] = useState({text: "", isError: false})
 
   useEffect(() => {
     phoneEntriesService.getAll()
@@ -24,19 +28,50 @@ const App = () => {
     if(names.includes(newName)){
       if(window.confirm(`${newName} is already added to phonebook. Do you want to replace the old number with the new one`)){
         let person = persons.find((elem) => elem.name == newName)
-        console.log("update, person: ", person)
-        phoneEntriesService.update(person.id, {name: newName, number: newNumber}).then((res) => console.log(res))
-        let newPersons = persons.map((elem) => elem.id === person.id ? {name: newName, number: newNumber, id: person.id} : elem)
-        setPersons(newPersons)
-        setNewName('')
-        setNewNumber('')
+        phoneEntriesService.update(person.id, {name: newName, number: newNumber})
+          .then((res) => {
+            let newPersons = persons.map((elem) => elem.id === person.id ? {name: newName, number: newNumber, id: person.id} : elem)
+            setPersons(newPersons)
+            setNewName('')
+            setNewNumber('')
+
+            setNotification({text: `Successfully updated the data of ${person.name}`, isError: false})
+            window.setTimeout(() => {
+              setNotification({text: '', isError: false})
+            }, 5000)
+          })
+          .catch((error) => {
+            if(error.response.status === 404){
+              setNotification({text: `The data for ${person.name} could not be found.`, isError: true})
+                window.setTimeout(() => {
+                setNotification({text: '', isError: false})
+              }, 5000)
+            }else{
+              setNotification({text: `An error occured while updating the data afor ${person.name}`, isError: true})
+              window.setTimeout(() => {
+                setNotification({text: '', isError: false})
+              }, 5000)
+            }
+          })
       }
     }else{
       phoneEntriesService.create({name: newName, number: newNumber})
-        .then((data) => {phoneEntriesService.getAll()
-          .then((newPersons) => {
-            setPersons(newPersons)
-          })})
+        .then((data) => {
+          setNotification({text: `Successfully created the data of ${newName}`, isError: false})
+            window.setTimeout(() => {
+              setNotification({text: '', isError: false})
+            }, 5000)
+
+          phoneEntriesService.getAll()
+            .then((newPersons) => {
+              setPersons(newPersons)
+            })})
+        .catch((error) => {
+          setNotification({text: `An error occured while updating the data afor ${newName}`, isError: true})
+            window.setTimeout(() => {
+              setNotification({text: '', isError: false})
+            }, 5000)
+        })
       setNewName('')
       setNewNumber('')
     }
@@ -70,6 +105,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification data={notification}></Notification>
       <Filter handleSearchChange={handleSearchChange}></Filter>
       <PhoneForm handleInputChange={handleInputChange} handleNumberChange={handleNumberChange} handleSubmit={handleSubmit} newName={newName} newNumber={newNumber}></PhoneForm>
       <Display persons={persons} searchFilter={searchFilter} deleteFunction={deleteEntry}></Display>

@@ -1,0 +1,15 @@
+.notification {
+    border: 2px solid green;
+    background-color: lightgray;
+    color: black;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.error {
+    border: 2px solid red;
+    background-color: lightgray;
+    color: black;
+    padding: 15px;
+    margin-bottom: 15px;
+}
