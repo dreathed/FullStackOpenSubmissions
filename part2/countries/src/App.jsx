@@ -2,49 +2,9 @@ import { useState } from 'react'
 import { useEffect } from 'react'
 import countryService from "./services/countries"
 
+import Search from "./components/search"
+import Display from './components/display'
 
-const Search = ({search}) => {
-  return (
-    <div>
-      find countries <input onChange={search}></input>
-    </div>
-  )
-}
-
-
-const Display = ({data}) => {
-  if(data.length > 10){
-    return (
-      <div>
-        Too many matches, specify another filter
-      </div>
-    )
-  }else if(data.length > 1){
-    return (
-      <>
-        {data.map((elem) => {
-          return <div key={elem.cca3}>{elem.name.common}</div>
-        })}
-      </>
-    )
-  }else if(data.length == 1){
-    return (
-    <>
-      <h1>{data[0].name.common}</h1>
-      <div>capital: {data[0].capital.join(", ")}</div>
-      <div>area: {data[0].area}</div>
-      <h2>languages</h2>
-      <ul>
-        {Object.values(data[0].languages).map((elem) => <li key={elem}>{elem}</li>)}
-      </ul>
-      <div style={{fontSize: "100pt"}}>
-        {data[0].flag}
-      </div>
-    </>
-    )
-  }
-  
-}
 
 function App() {
   const [countries, setCountries] = useState([])
@@ -52,7 +12,6 @@ function App() {
 
   useEffect(() => {
     countryService.getAll().then((data) => {
-      console.log(data)
       setCountries(data)
     })
   }, [])
@@ -64,7 +23,7 @@ function App() {
   return (
     <>
     <Search search={search}></Search>
-    <Display data={countries.filter((country) => country.name.common.toLowerCase().includes(filter.toLowerCase()))}></Display>
+    <Display setFilter={setFilter} data={countries.filter((country) => country.name.common.toLowerCase().includes(filter.toLowerCase()))}></Display>
     </>
   )
 }
